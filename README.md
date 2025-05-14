@@ -1,4 +1,4 @@
-# Open-Insects 
+# Open-Insect
 
 ## Datasets
 
