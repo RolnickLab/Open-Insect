@@ -2,7 +2,7 @@
 
 ## Datasets
 
-The metadata can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, use `download.py` to download the images.
+The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, use `download.py` to download the images.
 
 ## Virtual environment
 
@@ -36,6 +36,8 @@ To test training methods that require auxiliary data, run
 ```
 bash scripts/examples/train_with_aux_data.sh
 ```
+
+The training and validation accuracy are expected to be 0 after 2 epochs as there is only 1 image per speices in the training set, and the model is trained from scratch.
 
 
 ### Evaluation

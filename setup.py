@@ -25,6 +25,7 @@ setup(
         "wandb",
         "numpy==1.26.4",
         "timm",
+        "datasets",
     ],
     author="anonymous",
     description="Package for the Open-Insect benchmark",
