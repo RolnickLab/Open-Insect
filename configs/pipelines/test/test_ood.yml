@@ -29,6 +29,3 @@ wandb:
   entity: None
 
 save_arrays: False
-
-trainer:
-  name: None
