@@ -1,26 +1,27 @@
 # Open-Insect
 
+This codebase has only been tested on Debian-based Linux systems. CUDA is required. 
+
 ## Datasets
 
-The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect).
+The Open-Insect dataset is publicly avaiable at [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect).
 
-You can run 
-
-```
-bash download.sh
-```
 
 To download the images and generate metadata for training:
 
-- Modify `download_dir` to change the folder to save the downloaded dataset.
-- The `resize_size` is the smaller edge of the image after resizing. Change `resize_size` accordingly.
-- If you do not want to resize the images, simply delete `--resize_size 224` from the command. 
+- Change `download_dir` to the directory where you want the downloaded dataset to be saved.
+- The `resize_size` is the smaller edge of the image after resizing. Change `resize_size` accordingly. The default value is 224. 
+- If you do not want to resize the images, simply delete `--resize_size 224` from the command. Without resizing, the downloaded images will require approximately 6TB of storage.
+- Run 
+    ```
+    bash download.sh
+    ```
 
 Once downloading finishes, 
-- images will be saved under `<download_dir>/images`.
+- Images will be saved under `<download_dir>/images`.
 - Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. 
-- Change `data_dir`, `imglist_pth`, and `pre_size` in the configs in `configs/datasets` accordingly before training or evaluation.
-- You can find the configurations under `configs`.
+- Change `data_dir`, `imglist_pth`, and `pre_size` in the configs under `configs/datasets` accordingly before training or evaluation.
+
 
 ## Requirements
 
@@ -37,20 +38,27 @@ pip install -e .
 pip install libmr
 ```
 
-## Training
+## Experiments
+The default batch size is 512 and the number of works is 16. With this setting, models can be trained with 1 RTX800 GPU with 48 GB memory, 16 CPUs (and 16 workers), and 100 GB CPU memory in total. 
+
+### Training
 For training, modify the configs in `scripts/train.sh` and run 
 
 ```
 bash scripts/train.sh
 ```
+You can find the configurations under `configs`.
 
-## Evaluation
+
+
+### Evaluation
 
 For evaluation, modify the configs in `scripts/eval.sh` and run 
 
 ```
 bash scripts/eval.sh
 ```
+You can find the configurations under `configs`.
 
 
 ## Examples
