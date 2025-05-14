@@ -1,0 +1,36 @@
+dataset:
+  name: open-insect-example
+  num_classes: 636
+  pre_size: 224 # the original size of the image
+  image_size: 126 # the size of the image as the input to the model
+
+  interpolation: bilinear
+  normalization_type: imagenet
+
+  num_workers: '@{num_workers}'
+  num_gpus: '@{num_gpus}'
+  num_machines: '@{num_machines}'
+
+  split_names: [train, val, test]
+
+  train:
+    dataset_class: ImglistDataset
+    data_dir: ./images
+    imglist_pth: ./metadata/train_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    batch_size: 512
+    shuffle: True
+    len: 636 # total number of images
+  val:
+    dataset_class: ImglistDataset
+    data_dir: ./images # the image directory 
+    imglist_pth: ./metadata/val_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    batch_size: 128
+    shuffle: False
+  test:
+    dataset_class: ImglistDataset
+    data_dir: ./images # the image directory 
+    imglist_pth: ./metadata/test_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    batch_size: 128
+    shuffle: False
+  
+  

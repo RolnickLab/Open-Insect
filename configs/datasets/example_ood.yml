@@ -1,0 +1,30 @@
+ood_dataset:
+  name: open-insect-example-ood
+  num_classes: 636
+
+  num_workers: '@{num_workers}'
+  num_gpus: '@{num_gpus}'
+  num_machines: '@{num_machines}'
+
+  dataset_class: ImglistDataset
+  batch_size: 128
+  shuffle: False
+
+  split_names: [val, nearood, farood]
+  val:
+    data_dir: ./images
+    imglist_pth: ./metadata/val_ood.txt
+  nearood:
+    datasets: [local]
+    local:
+      data_dir: ./images
+      imglist_pth: ./metadata/test_ood_local.txt
+  farood:
+    datasets: [non-local, non-moth]
+    non-local:
+      data_dir: ./images
+      imglist_pth: ./metadata/test_ood_non-local.txt
+    non-moth: 
+      data_dir: ./images
+      imglist_pth: ./metadata/test_ood_non-moth.txt
+      

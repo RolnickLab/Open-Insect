@@ -1,0 +1,12 @@
+postprocessor:
+  name: neco
+  APS_mode: True
+  
+  postprocessor_args:
+    dim: 100
+  
+  postprocessor_sweep:
+    dim_list: [100, 200, 300, 400]
+
+
+  
