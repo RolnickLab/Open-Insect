@@ -4,6 +4,7 @@ from openood.utils.config import setup_config
 from openood.networks import get_network
 from evaluator import BioEvaluator
 import os
+import pandas as pd
 
 # init
 config = setup_config()
@@ -40,5 +41,5 @@ dataset_name = config.dataset.name
 save_dir = f"output/{dataset_name}/{config.trainer.name}"
 os.makedirs(save_dir, exist_ok=True)
 csv_path = os.path.join(save_dir, f"{config.postprocessor.name}.csv")
-results.round(4)
+results = results.round(4)
 results.to_csv(csv_path, index=False)
