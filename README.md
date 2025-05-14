@@ -9,10 +9,16 @@ You can modify `download_dir` to change the folder to save the downloaded datase
 Images will be saved under `<download_dir>/images`.
 Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. Change `data_dir`, `imglist_pth`, and `pre_size` in the configs in `configs/datasets` accordingly. 
 
-## Virtual environment
+## Requirements
 
 Create a virtual environment with `python3.10`. Activate the environment and install the packages with the following commands. 
+
+
 ```
+conda create -n oi_env python=3.10
+
+conda activate oi_env
+
 pip install -e .
 
 pip install libmr
@@ -28,7 +34,18 @@ For evaluation, modify `scripts/eval.sh` and run `bash scripts/eval.sh`.
 You can find the configurations under `configs`.
 
 ## Examples
-Here is a minimal example to test this codebase. First, activate the virtual environment. 
+Here is a minimal example to test this codebase. First, activate the virtual environment by
+
+```
+conda activate oi_env
+```
+then download the pretrained weights by running
+
+```
+python download_pretrained_weights.py
+```
+
+The model should be saved under `weights/c-america_resnet50_baseline.pth`.
 
 ### Training
 
@@ -46,9 +63,7 @@ The training and validation accuracy are expected to be 0 after 2 epochs as ther
 
 
 ### Evaluation
-First, download the model weights from [huggingface](https://huggingface.co/anonymous987654356789/open-insect-test-model/blob/main/c-america_resnet50_baseline.pth) and place it under `weights`.
-
-Then run 
+Run 
 ```
 bash scripts/examples/eval.sh
 ```

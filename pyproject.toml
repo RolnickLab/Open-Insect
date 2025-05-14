@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OpenInsect"
+version = "1.0"
+description = "Package for the Open-Insect benchmark"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "anonymous" }
+]
+license = {text = "MIT"}  
+dependencies = [
+    "torch>=1.31.1",
+    "torchvision>=0.13",
+    "scikit-learn",
+    "json5",
+    "matplotlib",
+    "scipy",
+    "tqdm",
+    "pyyaml>=5.4.1",
+    "pre-commit",
+    "opencv-python>=4.4.0.46",
+    "imgaug>=0.4.0",
+    "pandas",
+    "diffdist>=0.1",
+    "Cython>=0.29.30",
+    "faiss-gpu>=1.7.2",
+    "gdown>=4.7.1",
+    "wandb",
+    "numpy==1.26.4",
+    "timm",
+    "datasets"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Debian based Linux"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
