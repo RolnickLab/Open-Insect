@@ -2,7 +2,12 @@
 
 ## Datasets
 
-The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, use `download.py` to download the images.
+The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, run `download.sh` to download the images and generate metadata for training.
+
+You can modify `download_dir` to change the folder to save the downloaded dataset. You can change `resize_size` to change the size of which the image will be resized to. The `resize_size` is the smaller edge of the image after resizing. If you do not want to resize the images, simply delete `--resize_size 224` from the command. 
+
+Images will be saved under `<download_dir>/images`.
+Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. Change `data_dir`, `imglist_pth`, and `pre_size` in the configs in `configs/datasets` accordingly. 
 
 ## Virtual environment
 
