@@ -2,17 +2,30 @@
 
 ## Datasets
 
-The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, run `download.sh` to download the images and generate metadata for training.
+The metadata for the Open-Insect dataset can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect).
 
-You can modify `download_dir` to change the folder to save the downloaded dataset. You can change `resize_size` to change the size of which the image will be resized to. The `resize_size` is the smaller edge of the image after resizing. If you do not want to resize the images, simply delete `--resize_size 224` from the command. 
+You can run 
 
-Images will be saved under `<download_dir>/images`.
-Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. Change `data_dir`, `imglist_pth`, and `pre_size` in the configs in `configs/datasets` accordingly. 
+```
+bash download.sh
+```
+
+To download the images and generate metadata for training:
+
+- Modify `download_dir` to change the folder to save the downloaded dataset.
+- The `resize_size` is the smaller edge of the image after resizing. Change `resize_size` accordingly.
+- If you do not want to resize the images, simply delete `--resize_size 224` from the command. 
+
+Once downloading finishes, 
+- images will be saved under `<download_dir>/images`.
+- Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. 
+- Change `data_dir`, `imglist_pth`, and `pre_size` in the configs in `configs/datasets` accordingly before training or evaluation.
+- You can find the configurations under `configs`.
 
 ## Requirements
 
-Create a virtual environment with `python3.10`. Activate the environment and install the packages with the following commands. 
 
+Run the following commands to install dependencies.
 
 ```
 conda create -n oi_env python=3.10
@@ -24,17 +37,24 @@ pip install -e .
 pip install libmr
 ```
 
-## Running experiments
+## Training
+For training, modify the configs in `scripts/train.sh` and run 
 
+```
+bash scripts/train.sh
+```
 
-For training, modify `scripts/train.sh` and run `bash scripts/train.sh`.
+## Evaluation
 
-For evaluation, modify `scripts/eval.sh` and run `bash scripts/eval.sh`.
+For evaluation, modify the configs in `scripts/eval.sh` and run 
 
-You can find the configurations under `configs`.
+```
+bash scripts/eval.sh
+```
+
 
 ## Examples
-Here is a minimal example to test this codebase. First, activate the virtual environment by
+Here are some minimal examples to test this codebase. First, activate the virtual environment by
 
 ```
 conda activate oi_env
@@ -68,6 +88,7 @@ Run
 bash scripts/examples/eval.sh
 ```
 The output will be saved as `output/open-insect-example/base/msp.csv`. You can compare the output with `output/open-insect-example/base/msp_expected.csv`.
+
 ## Acknowledgement
 
 This codebase is built using [OpenOOD](https://github.com/Jingkang50/OpenOOD/tree/main). We sincerely appreciate their efforts in making this valuable resource publicly available.
