@@ -2,11 +2,11 @@
 
 ## Datasets
 
-The dataset is on [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect).
+The metadata can be downloaded from [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect). After downloading the metadata, use `download.py` to download the images.
 
 ## Virtual environment
 
-It requires python 3.10. 
+Create a virtual environment with `python3.10`. Activate the environment and install the packages with the following commands. 
 ```
 pip install -e .
 
@@ -20,16 +20,32 @@ For training, modify `scripts/train.sh` and run `bash scripts/train.sh`.
 
 For evaluation, modify `scripts/eval.sh` and run `bash scripts/eval.sh`.
 
+You can find the configurations under `configs`.
 
 ## Examples
+Here is a minimal example to test this codebase. First, activate the virtual environment. 
 
-first download the weights from [huggingface](https://huggingface.co/anonymous987654356789/open-insect-test-model/blob/main/c-america_resnet50_baseline.pth) and put it under `weights`
+### Training
 
-activate the virtual environment and run 
+To test training methods that do no require auxiliary data, run 
+```
+bash scripts/examples/train.sh
+```
+
+To test training methods that require auxiliary data, run 
+```
+bash scripts/examples/train_with_aux_data.sh
+```
+
+
+### Evaluation
+First, download the model weights from [huggingface](https://huggingface.co/anonymous987654356789/open-insect-test-model/blob/main/c-america_resnet50_baseline.pth) and place it under `weights`.
+
+Then run 
 ```
 bash scripts/examples/eval.sh
 ```
-Check if the output `output/open-insect-example/base/msp.csv` is the same as `output/open-insect-example/base/msp_expected.csv`.
+The output will be saved as `output/open-insect-example/base/msp.csv`. You can compare the output with `output/open-insect-example/base/msp_expected.csv`.
 ## Acknowledgement
 
 This codebase is built using [OpenOOD](https://github.com/Jingkang50/OpenOOD/tree/main). We sincerely appreciate their efforts in making this valuable resource publicly available.

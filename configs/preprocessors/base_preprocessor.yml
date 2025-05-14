@@ -1,2 +1,5 @@
 preprocessor:
   name: base
+
+trainer:
+  name:

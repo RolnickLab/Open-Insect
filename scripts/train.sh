@@ -1,13 +1,4 @@
 #!/bin/bash
-module load python/3.10
-
-source ~/<env>/bin/activate
-
-PYTHONPATH=$PYTHONPATH
-PYTHONPATH=src:$PYTHONPATH
-PYTHONPATH=src/OpenOOD:$PYTHONPATH
-
-export PYTHONPATH
 
 python scripts/main.py \
  --config configs/datasets/<dataset config>.yml \
