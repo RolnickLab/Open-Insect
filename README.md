@@ -1,6 +1,6 @@
 # Open-Insect
 
-This codebase has only been tested on Debian-based Linux systems. CUDA is required. 
+This codebase has only been tested on Debian-based Linux systems. CUDA is required to install the dependencies and run experiments.  
 
 ## Datasets
 
