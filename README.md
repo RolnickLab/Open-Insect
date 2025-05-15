@@ -43,13 +43,19 @@ pip install libmr
 The default batch size is 512 and the number of works is 16. With this setting, models can be trained with 1 RTX800 GPU with 48 GB memory, 16 CPUs (and 16 workers), and 100 GB CPU memory in total. 
 
 ### Training
-For training, modify the configs in `scripts/train.sh` and run 
+For training methods that do not require auxilairy data, modify the configs in `scripts/train.sh` and run 
 
 ```
 bash scripts/train.sh
 ```
 You can find the configurations under `configs`.
 
+For training methods that require auxilairy data, modify the configs in `scripts/train_with_aux_data.sh` and run 
+
+```
+bash scripts/train.sh
+```
+You can find the configurations under `configs`.
 
 
 ### Evaluation
