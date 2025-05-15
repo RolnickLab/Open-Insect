@@ -1,6 +1,16 @@
-# Open-Insect
+# Open-Insect 
 
 This codebase has only been tested on Debian-based Linux systems. CUDA is required to install the dependencies and run experiments.  
+
+## Getting Started
+
+First, clone the repository and navigate into the project directory:
+
+```
+git clone https://github.com/Yuyan-C/Open-Insect.git
+
+cd Open-Insect/
+```
 
 ## Datasets
 
