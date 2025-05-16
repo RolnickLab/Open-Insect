@@ -5,8 +5,8 @@ This codebase has only been tested on Debian-based Linux systems. CUDA is requir
 
 ## Datasets
 
-The Open-Insect dataset is publicly avaiable at [huggingface](https://huggingface.co/datasets/anonymous987654356789/open-insect).
-
+### Open-Insect
+The Open-Insect dataset with GBIF images is publicly avaiable at [open-insect](https://huggingface.co/datasets/anonymous987654356789/open-insect) on hugggingface.
 
 To download the images and generate metadata for training:
 
@@ -20,9 +20,34 @@ To download the images and generate metadata for training:
 
 Once downloading finishes, 
 - Images will be saved under `<download_dir>/images`.
-- Metadata for training and evaluation will be saved under `<dowload_dir>/metadata`. 
+- Metadata for training and evaluation of each region will be saved as
+    ```
+    <download_dir>/metadata/<region>
+    │   ├── test_id.csv
+    │   ├── test_ood_local.csv
+    │   ├── test_ood_non-local.csv
+    │   ├── test_ood_non-moth.csv
+    │   ├── train_aux.csv
+    │   ├── train_id.csv
+    │   ├── val_id.csv
+    │   └── val_ood.csv
+    ```
 - Change `data_dir`, `imglist_pth`, and `pre_size` in the configs under `configs/datasets` accordingly before training or evaluation.
 
+
+### Open-Insect-BCI
+
+The C-America OOD-BCI dataset is hosted separately at [open-insect-bci](https://huggingface.co/datasets/anonymous987654356789/open-insect-bci) on huggingface.
+
+Run
+
+```
+python download_bci.py --download_dir .
+```
+to download the BCI dataset to the current directory, or change the `download_dir` accordingly.
+
+- Images will be saved under `<download_dir>/images/bci`.
+- Metadata will be saved as `<dowload_dir>/metadata/c-america/test_ood_bci.txt`. 
 
 ## Requirements
 
