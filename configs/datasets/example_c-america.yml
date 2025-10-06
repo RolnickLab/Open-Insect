@@ -1,6 +1,7 @@
 dataset:
   name: open-insect-example
   num_classes: 636
+  num_closed_set: 636
   pre_size: 224 # the original size of the image
   image_size: 126 # the size of the image as the input to the model
 

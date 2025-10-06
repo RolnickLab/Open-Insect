@@ -1,0 +1,31 @@
+ood_dataset:
+  name: ami_c-america
+  num_classes: 636
+
+  num_workers: '@{num_workers}'
+  num_gpus: '@{num_gpus}'
+  num_machines: '@{num_machines}'
+
+  dataset_class: ImglistDataset
+  batch_size: 128
+  shuffle: False
+
+  split_names: [val, nearood, farood]
+  val:
+    data_dir: /network/scratch/y/yuyan.chen/ami_gbif_train_resized_new/
+    imglist_pth: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/txt/03_c-america_val_aux.txt
+  nearood:
+    datasets: [local]
+    local:
+      data_dir: /network/scratch/y/yuyan.chen/ami_gbif_train_resized_new/
+      imglist_pth: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/txt/03_c-america_test_ood_local.txt
+  farood:
+    datasets: [non-local, non-moth]
+    non-local:
+      data_dir: /network/scratch/y/yuyan.chen/ami_gbif_train_resized_new/
+      imglist_pth: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/txt/05_test_ood_non-local.txt
+    non-moth: 
+      data_dir: /network/scratch/y/yuyan.chen/ami_gbif_train_resized_new/
+      imglist_pth: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/txt/06_test_ood_non-moth.txt
+
+      
