@@ -20,6 +20,7 @@ dataset:
     imglist_pth: ./metadata/train_id.txt # the metadata (a txt file with the following format:<image path> <label>)
     batch_size: 512
     shuffle: True
+    json_path: ./data/c-america_category_map.json 
     len: 636 # total number of images
   val:
     dataset_class: ImglistDataset

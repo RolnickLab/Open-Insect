@@ -9,7 +9,7 @@ description = "Package for the Open-Insect benchmark"
 readme = "README.md"
 requires-python = ">=3.10, <3.11"
 authors = [
-  { name = "anonymous" }
+  { name = "Yuyan Chen" }
 ]
 license = {text = "MIT"}  
 dependencies = [
@@ -32,7 +32,8 @@ dependencies = [
     "wandb",
     "numpy==1.26.4",
     "timm",
-    "datasets"
+    "datasets",
+    "XCurve",
 ]
 
 classifiers = [

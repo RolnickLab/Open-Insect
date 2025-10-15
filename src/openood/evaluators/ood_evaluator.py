@@ -11,6 +11,38 @@ from openood.utils import Config
 
 from .base_evaluator import BaseEvaluator
 from .metrics import compute_all_metrics
+import pandas as pd
+
+
+def get_osa_threshold(score_known, score_unknown, pred_known, label_known, alpha):
+
+    def osa_at_theta(score_known, score_unknown, pred_known, label_known, theta, alpha):
+
+        def ccr_theta(score_known, pred_known, label_known, theta):
+            correct = pred_known == label_known
+            confident = score_known >= theta
+            return (correct & confident).sum() / len(label_known)
+
+        def urr_theta(score_unknown, theta):
+            return (score_unknown < theta).mean()
+
+        osa = alpha * ccr_theta(score_known, pred_known, label_known, theta) + (
+            1 - alpha
+        ) * urr_theta(score_unknown, theta)
+
+        return osa
+
+    all_scores = np.concatenate([score_known, score_unknown])
+    thresholds = np.unique(all_scores)
+
+    osa_list = []
+    for theta in thresholds:
+        osa = osa_at_theta(
+            score_known, score_unknown, pred_known, label_known, theta, alpha
+        )
+        osa_list.append(osa)
+
+    return max(osa_list), thresholds[np.argmax(osa_list)]
 
 
 class OODEvaluator(BaseEvaluator):
@@ -33,6 +65,21 @@ class OODEvaluator(BaseEvaluator):
         postprocessor: BasePostprocessor,
         fsood: bool = False,
     ):
+
+        id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loaders["val"])
+        ood_pred, ood_conf, ood_gt = postprocessor.inference(
+            net, ood_data_loaders["val"]
+        )
+
+        osa, threshold = get_osa_threshold(
+            id_conf, ood_conf, id_pred, id_gt, 0.5
+        )  # negate the scores so we have positive confidence
+
+        postprocessor.osa_threshold = threshold
+
+        print(f"OSA threshold from val set: {postprocessor.osa_threshold}")
+        print(f"Val OSA : {osa}")
+
         if type(net) is dict:
             for subnet in net.values():
                 subnet.eval()
@@ -44,7 +91,9 @@ class OODEvaluator(BaseEvaluator):
         if self.config.postprocessor.APS_mode:
             assert "val" in id_data_loaders
             assert "val" in ood_data_loaders
-            self.hyperparam_search(net, id_data_loaders["val"], ood_data_loaders["val"], postprocessor)
+            self.hyperparam_search(
+                net, id_data_loaders["val"], ood_data_loaders["val"], postprocessor
+            )
 
         print(f"Performing inference on {dataset_name} dataset...", flush=True)
         id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loaders["test"])
@@ -64,11 +113,42 @@ class OODEvaluator(BaseEvaluator):
 
         # load nearood data and compute ood metrics
         print("\u2500" * 70, flush=True)
-        self._eval_ood(net, [id_pred, id_conf, id_gt], ood_data_loaders, postprocessor, ood_split="nearood")
+        near_metrics = self._eval_ood(
+            net,
+            [id_pred, id_conf, id_gt],
+            ood_data_loaders,
+            postprocessor,
+            ood_split="nearood",
+        )
 
         # load farood data and compute ood metrics
         print("\u2500" * 70, flush=True)
-        self._eval_ood(net, [id_pred, id_conf, id_gt], ood_data_loaders, postprocessor, ood_split="farood")
+        far_metrics = self._eval_ood(
+            net,
+            [id_pred, id_conf, id_gt],
+            ood_data_loaders,
+            postprocessor,
+            ood_split="farood",
+        )
+
+        combined_metrics = near_metrics + far_metrics
+        nearood_keys = list(ood_data_loaders["nearood"].keys())
+        farood_keys = list(ood_data_loaders["farood"].keys())
+        index_labels = nearood_keys + farood_keys
+        df = pd.DataFrame(combined_metrics, index=index_labels).round(2)
+
+        with pd.option_context(
+            "display.max_rows",
+            None,
+            "display.max_columns",
+            None,
+            "display.float_format",
+            "{:,.2f}".format,
+        ):  # more options can be specified also
+            print(df)
+
+        csv_path = os.path.join(self.config.output_dir, "ood.csv")
+        df.to_csv(csv_path)
 
     def _eval_ood(
         self,
@@ -94,16 +174,10 @@ class OODEvaluator(BaseEvaluator):
 
             print(f"Computing metrics on {dataset_name} dataset...")
 
-            ood_metrics = compute_all_metrics(conf, label, pred)
-            if self.config.recorder.save_csv:
-                self._save_csv(ood_metrics, dataset_name=dataset_name)
+            ood_metrics = compute_all_metrics(
+                conf, label, pred, postprocessor.osa_threshold
+            )
             metrics_list.append(ood_metrics)
-
-        print("Computing mean metrics...", flush=True)
-        metrics_list = np.array(metrics_list)
-        metrics_mean = np.mean(metrics_list, axis=0)
-        if self.config.recorder.save_csv:
-            self._save_csv(metrics_mean, dataset_name=ood_split)
 
         return metrics_list
 
@@ -122,15 +196,23 @@ class OODEvaluator(BaseEvaluator):
         assert "val" in id_data_loaders
         assert "val" in ood_data_loaders
         if self.config.postprocessor.APS_mode:
-            val_auroc = self.hyperparam_search(net, id_data_loaders["val"], ood_data_loaders["val"], postprocessor)
+            val_auroc = self.hyperparam_search(
+                net, id_data_loaders["val"], ood_data_loaders["val"], postprocessor
+            )
         else:
-            id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loaders["val"])
-            ood_pred, ood_conf, ood_gt = postprocessor.inference(net, ood_data_loaders["val"])
+            id_pred, id_conf, id_gt = postprocessor.inference(
+                net, id_data_loaders["val"]
+            )
+            ood_pred, ood_conf, ood_gt = postprocessor.inference(
+                net, ood_data_loaders["val"]
+            )
             ood_gt = -1 * np.ones_like(ood_gt)  # hard set to -1 as ood
             pred = np.concatenate([id_pred, ood_pred])
             conf = np.concatenate([id_conf, ood_conf])
             label = np.concatenate([id_gt, ood_gt])
-            ood_metrics = compute_all_metrics(conf, label, pred)
+            ood_metrics = compute_all_metrics(
+                conf, label, pred, postprocessor.osa_threshold
+            )
             val_auroc = ood_metrics[1]
         return {"auroc": 100 * val_auroc}
 
@@ -149,8 +231,15 @@ class OODEvaluator(BaseEvaluator):
         fieldnames = list(write_content.keys())
 
         # print ood metric results
-        print("FPR@95: {:.2f}, AUROC: {:.2f}".format(100 * fpr, 100 * auroc), end=" ", flush=True)
-        print("AUPR_IN: {:.2f}, AUPR_OUT: {:.2f}".format(100 * aupr_in, 100 * aupr_out), flush=True)
+        print(
+            "FPR@95: {:.2f}, AUROC: {:.2f}".format(100 * fpr, 100 * auroc),
+            end=" ",
+            flush=True,
+        )
+        print(
+            "AUPR_IN: {:.2f}, AUPR_OUT: {:.2f}".format(100 * aupr_in, 100 * aupr_out),
+            flush=True,
+        )
         print("ACC: {:.2f}".format(accuracy * 100), flush=True)
         print("\u2500" * 70, flush=True)
 
@@ -187,7 +276,9 @@ class OODEvaluator(BaseEvaluator):
             net["backbone"].eval()
         else:
             net.eval()
-        self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(net, data_loader)
+        self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(
+            net, data_loader
+        )
 
         if fsood:
             assert csid_data_loaders is not None
@@ -232,12 +323,14 @@ class OODEvaluator(BaseEvaluator):
             pred = np.concatenate([id_pred, ood_pred])
             conf = np.concatenate([id_conf, ood_conf])
             label = np.concatenate([id_gt, ood_gt])
-            ood_metrics = compute_all_metrics(conf, label, pred)
+            ood_metrics = compute_all_metrics(
+                conf, label, pred, postprocessor.osa_threshold
+            )
             index = hyperparam_combination.index(hyperparam)
-            aps_dict[index] = ood_metrics[1]
+            aps_dict[index] = ood_metrics["AUROC"]
             print("Hyperparam:{}, auroc:{}".format(hyperparam, aps_dict[index]))
-            if ood_metrics[1] > max_auroc:
-                max_auroc = ood_metrics[1]
+            if ood_metrics["AUROC"] > max_auroc:
+                max_auroc = ood_metrics["AUROC"]
         for key in aps_dict.keys():
             if aps_dict[key] == max_auroc:
                 postprocessor.set_hyperparam(hyperparam_combination[key])

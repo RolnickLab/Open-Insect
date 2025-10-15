@@ -46,11 +46,15 @@ from .neco_postprocessor import NecoPostprocessor
 from .contrastive_postprocessor import ContrastivePostprocessor
 from .osr_branch_postprocessor import OSRBranchPostprocessor
 from .novel_branch_postprocessor import NovelBranchPostprocessor
+from .rp_msp_postprocessor import RPMSPPostprocessor
+from .rp_odin_postprocessor import RPODINPostprocessor
+from .rp_ebo_postprocessor import RPEBOPostprocessor
+from .rp_gradnorm_postprocessor import RPGNPostprocessor
 
 
 def get_postprocessor(config: Config):
     postprocessors = {
-        'nci': NCIPostprocessor,
+        "nci": NCIPostprocessor,
         "fdbd": fDBDPostprocessor,
         "ash": ASHPostprocessor,
         "cider": CIDERPostprocessor,
@@ -94,6 +98,10 @@ def get_postprocessor(config: Config):
         "relation": RelationPostprocessor,
         "t2fnorm": T2FNormPostprocessor,
         "neco": NecoPostprocessor,
+        "rp_msp": RPMSPPostprocessor,
+        "rp_odin": RPODINPostprocessor,
+        "rp_ebo": RPEBOPostprocessor,
+        "rp_gradnorm": RPGNPostprocessor,
         "contrastive": ContrastivePostprocessor,
         "osr_branch": OSRBranchPostprocessor,
         "novel_branch": NovelBranchPostprocessor,

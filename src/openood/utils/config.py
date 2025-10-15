@@ -5,7 +5,7 @@ import re
 import yaml
 
 
-def setup_config(config_process_order=('merge', 'parse_args', 'parse_refs')):
+def setup_config(config_process_order=("merge", "parse_args", "parse_refs")):
     """Parsing configuration files and command line augments.
 
     This method reads the command line to
@@ -38,27 +38,27 @@ def setup_config(config_process_order=('merge', 'parse_args', 'parse_refs')):
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', dest='config', nargs='+', required=True)
+    parser.add_argument("--config", dest="config", nargs="+", required=True)
     opt, unknown_args = parser.parse_known_args()
     config = [Config(path) for path in opt.config]
 
     for process in config_process_order:
-        if process == 'merge':
+        if process == "merge":
             config = merge_configs(*config)
-        elif process == 'parse_args':
+        elif process == "parse_args":
             if isinstance(config, Config):
                 config.parse_args(unknown_args)
             else:
                 for cfg in config:
                     cfg.parse_args(unknown_args)
-        elif process == 'parse_refs':
+        elif process == "parse_refs":
             if isinstance(config, Config):
                 config.parse_refs()
             else:
                 for cfg in config:
                     cfg.parse_refs()
         else:
-            raise ValueError('unknown config process name: {}'.format(process))
+            raise ValueError("unknown config process name: {}".format(process))
 
     # manually modify 'output_dir'
     config.output_dir = os.path.join(config.output_dir, config.exp_name)
@@ -67,18 +67,18 @@ def setup_config(config_process_order=('merge', 'parse_args', 'parse_refs')):
 
 
 def parse_config(config):
-    config_process_order = ('merge', 'parse_refs')
+    config_process_order = ("merge", "parse_refs")
     for process in config_process_order:
-        if process == 'merge':
+        if process == "merge":
             config = merge_configs(*config)
-        elif process == 'parse_refs':
+        elif process == "parse_refs":
             if isinstance(config, Config):
                 config.parse_refs()
             else:
                 for cfg in config:
                     cfg.parse_refs()
         else:
-            raise ValueError('unknown config process name: {}'.format(process))
+            raise ValueError("unknown config process name: {}".format(process))
     # manually modify 'output_dir'
     config.output_dir = os.path.join(config.output_dir, config.exp_name)
 
@@ -89,34 +89,34 @@ class Config(dict):
     def __init__(self, *args, **kwargs):
         super(Config, self).__init__()
         for arg in args:
-            if arg == ' ':
+            if arg == " ":
                 continue  # hard code remove white space in config file list
             if isinstance(arg, str):
-                if arg.endswith('.yml'):
-                    with open(arg, 'r') as f:
+                if arg.endswith(".yml"):
+                    with open(arg, "r") as f:
                         raw_dict = yaml.safe_load(f)
                 else:
-                    raise Exception('unknown file format %s' % arg)
+                    raise Exception("unknown file format %s" % arg)
                 init_assign(self, raw_dict)
             elif isinstance(arg, dict):
                 init_assign(self, arg)
             else:
-                raise TypeError('arg should be an instance of <str> or <dict>')
+                raise TypeError("arg should be an instance of <str> or <dict>")
         if kwargs:
             init_assign(self, kwargs)
 
     def __call__(self, *args, **kwargs):
         return Config(self, *args, **kwargs)
 
-    def __repr__(self, indent=4, prefix=''):
+    def __repr__(self, indent=4, prefix=""):
         r = []
         for key, value in sorted(self.items()):
             if isinstance(value, Config):
-                r.append('{}{}:'.format(prefix, key))
-                r.append(value.__repr__(indent, prefix + ' ' * indent))
+                r.append("{}{}:".format(prefix, key))
+                r.append(value.__repr__(indent, prefix + " " * indent))
             else:
-                r.append('{}{}: {}'.format(prefix, key, value))
-        return '\n'.join(r)
+                r.append("{}{}: {}".format(prefix, key, value))
+        return "\n".join(r)
 
     def __setstate__(self, state):
         init_assign(self, state)
@@ -149,7 +149,7 @@ class Config(dict):
 
     def __setitem__(self, key, value):
         sub_cfg, sub_key = consume_dots(self, key, create_default=True)
-        if sub_cfg.__contains__(sub_key) and value == '_DELETE_CONFIG_':
+        if sub_cfg.__contains__(sub_key) and value == "_DELETE_CONFIG_":
             dict.__delitem__(sub_cfg, sub_key)
         else:
             dict.__setitem__(sub_cfg, sub_key, value)
@@ -168,24 +168,19 @@ class Config(dict):
 
     # traverse keys / values/ items
     def all_keys(self, only_leaf=True):
-        for key in traverse_dfs(self,
-                                'key',
-                                continue_type=Config,
-                                only_leaf=only_leaf):
+        for key in traverse_dfs(self, "key", continue_type=Config, only_leaf=only_leaf):
             yield key
 
     def all_values(self, only_leaf=True):
-        for value in traverse_dfs(self,
-                                  'value',
-                                  continue_type=Config,
-                                  only_leaf=only_leaf):
+        for value in traverse_dfs(
+            self, "value", continue_type=Config, only_leaf=only_leaf
+        ):
             yield value
 
     def all_items(self, only_leaf=True):
-        for key, value in traverse_dfs(self,
-                                       'item',
-                                       continue_type=Config,
-                                       only_leaf=only_leaf):
+        for key, value in traverse_dfs(
+            self, "item", continue_type=Config, only_leaf=only_leaf
+        ):
             yield key, value
 
     # for command line arguments
@@ -193,27 +188,27 @@ class Config(dict):
         unknown_args = []
         if cmd_args is None:
             import sys
+
             cmd_args = sys.argv[1:]
         index = 0
         while index < len(cmd_args):
             arg = cmd_args[index]
-            err_msg = 'invalid command line argument pattern: %s' % arg
-            assert arg.startswith('--'), err_msg
+            err_msg = "invalid command line argument pattern: %s" % arg
+            assert arg.startswith("--"), err_msg
             assert len(arg) > 2, err_msg
-            assert arg[2] != '-', err_msg
+            assert arg[2] != "-", err_msg
 
             arg = arg[2:]
-            if '=' in arg:
-                key, full_value_str = arg.split('=')
+            if "=" in arg:
+                key, full_value_str = arg.split("=")
                 index += 1
             else:
-                assert len(
-                    cmd_args) > index + 1, 'incomplete command line arguments'
+                assert len(cmd_args) > index + 1, "incomplete command line arguments"
                 key = arg
                 full_value_str = cmd_args[index + 1]
                 index += 2
-            if ':' in full_value_str:
-                value_str, value_type_str = full_value_str.split(':')
+            if ":" in full_value_str:
+                value_str, value_type_str = full_value_str.split(":")
                 value_type = eval(value_type_str)
             else:
                 value_str = full_value_str
@@ -223,7 +218,7 @@ class Config(dict):
                 if strict:
                     raise KeyError(key)
                 else:
-                    unknown_args.extend(['--' + key, full_value_str])
+                    unknown_args.extend(["--" + key, full_value_str])
                     continue
 
             if value_type is None:
@@ -231,12 +226,12 @@ class Config(dict):
 
             if value_type is bool:
                 self[key] = {
-                    'true': True,
-                    'True': True,
-                    '1': True,
-                    'false': False,
-                    'False': False,
-                    '0': False,
+                    "true": True,
+                    "True": True,
+                    "1": True,
+                    "false": False,
+                    "False": False,
+                    "0": False,
                 }[value_str]
             else:
                 self[key] = value_type(value_str)
@@ -247,19 +242,25 @@ class Config(dict):
     def parse_refs(self, subconf=None, stack_depth=1, max_stack_depth=10):
         if stack_depth > max_stack_depth:
             raise Exception(
-                ('Recursively calling `parse_refs` too many times'
-                 'with stack depth > {}. '
-                 'A circular reference may exists in your config.\n'
-                 'If deeper calling stack is really needed,'
-                 'please call `parse_refs` with extra argument like: '
-                 '`parse_refs(max_stack_depth=9999)`').format(max_stack_depth))
+                (
+                    "Recursively calling `parse_refs` too many times"
+                    "with stack depth > {}. "
+                    "A circular reference may exists in your config.\n"
+                    "If deeper calling stack is really needed,"
+                    "please call `parse_refs` with extra argument like: "
+                    "`parse_refs(max_stack_depth=9999)`"
+                ).format(max_stack_depth)
+            )
         if subconf is None:
             subconf = self
         for key in subconf.keys():
             value = subconf[key]
-            if type(value) is str and '@' in value:
-                if value.count('@') == 1 and value.startswith(
-                        '@{') and value.endswith('}'):
+            if type(value) is str and "@" in value:
+                if (
+                    value.count("@") == 1
+                    and value.startswith("@{")
+                    and value.endswith("}")
+                ):
                     # pure reference
                     ref_key = value[2:-1]
                     ref_value = self[ref_key]
@@ -268,16 +269,44 @@ class Config(dict):
                     # compositional references
                     ref_key_list = re.findall("'@{(.+?)}'", value)
                     ref_key_list = list(set(ref_key_list))
-                    ref_value_list = [
-                        self[ref_key] for ref_key in ref_key_list
-                    ]
+                    ref_value_list = [self[ref_key] for ref_key in ref_key_list]
                     origin_ref_key_list = [
                         "'@{" + ref_key + "}'" for ref_key in ref_key_list
                     ]
                     for origin_ref_key, ref_value in zip(
-                            origin_ref_key_list, ref_value_list):
+                        origin_ref_key_list, ref_value_list
+                    ):
                         value = value.replace(origin_ref_key, str(ref_value))
                     subconf[key] = value
+
+            elif isinstance(value, list) and any(
+                isinstance(v, str) and "@" in v for v in value
+            ):
+                resolved_list = []
+                for v in value:
+                    if isinstance(v, str) and "@" in v:
+                        if v.count("@") == 1 and v.startswith("@{") and v.endswith("}"):
+                            # pure reference in list element
+                            ref_key = v[2:-1]
+                            ref_value = self[ref_key]
+                            resolved_list.append(ref_value)
+                        else:
+                            # compositional reference in list element
+                            ref_key_list = re.findall(r"'@{(.+?)}'", v)
+                            ref_key_list = list(set(ref_key_list))
+                            ref_value_list = [self[ref_key] for ref_key in ref_key_list]
+                            origin_ref_key_list = [
+                                f"'@{{{ref_key}}}'" for ref_key in ref_key_list
+                            ]
+                            for origin_ref_key, ref_value in zip(
+                                origin_ref_key_list, ref_value_list
+                            ):
+                                v = v.replace(origin_ref_key, str(ref_value))
+                            resolved_list.append(v)
+                    else:
+                        resolved_list.append(v)
+
+                subconf[key] = resolved_list
         for key in subconf.keys():
             value = subconf[key]
             if type(value) is Config:
@@ -290,24 +319,26 @@ def merge_configs(*configs):
         config = configs[i]
         if not isinstance(config, Config):
             raise TypeError(
-                'config.merge_configs expect `Config` type inputs, '
-                'but got `{}`.\n'
-                'Correct usage: merge_configs(config1, config2, ...)\n'
-                'Incorrect usage: merge_configs([configs1, configs2, ...])'.
-                format(type(config)))
+                "config.merge_configs expect `Config` type inputs, "
+                "but got `{}`.\n"
+                "Correct usage: merge_configs(config1, config2, ...)\n"
+                "Incorrect usage: merge_configs([configs1, configs2, ...])".format(
+                    type(config)
+                )
+            )
         final_config = final_config(dict(config.all_items()))
     return final_config
 
 
 def consume_dots(config, key, create_default):
-    sub_keys = key.split('.', 1)
+    sub_keys = key.split(".", 1)
     sub_key = sub_keys[0]
 
     if sub_key in Config.__dict__:
         raise KeyError(
             '"{}" is a preserved API name, '
-            'which should not be used as normal dictionary key'.format(
-                sub_key))
+            "which should not be used as normal dictionary key".format(sub_key)
+        )
 
     if not dict.__contains__(config, sub_key) and len(sub_keys) == 2:
         if create_default:
@@ -328,33 +359,24 @@ def consume_dots(config, key, create_default):
         return consume_dots(sub_config, sub_keys[1], create_default)
 
 
-def traverse_dfs(root, mode, continue_type, only_leaf, key_prefix=''):
+def traverse_dfs(root, mode, continue_type, only_leaf, key_prefix=""):
     for key, value in root.items():
-        full_key = '.'.join([key_prefix, key]).strip('.')
+        full_key = ".".join([key_prefix, key]).strip(".")
         child_kvs = []
         if type(value) == continue_type:
-            for kv in traverse_dfs(value, mode, continue_type, only_leaf,
-                                   full_key):
+            for kv in traverse_dfs(value, mode, continue_type, only_leaf, full_key):
                 child_kvs.append(kv)
         # equivalent:
         # if not (len(child_kvs) > 0 and
         # type(value) == continue_type and
         # only_leaf)
-        if len(child_kvs
-               ) == 0 or type(value) != continue_type or not only_leaf:
-            yield {
-                'key': full_key,
-                'value': value,
-                'item': (full_key, value)
-            }[mode]
+        if len(child_kvs) == 0 or type(value) != continue_type or not only_leaf:
+            yield {"key": full_key, "value": value, "item": (full_key, value)}[mode]
         for kv in child_kvs:
             yield kv
 
 
 def init_assign(config, d):
-    for full_key, value in traverse_dfs(d,
-                                        'item',
-                                        continue_type=dict,
-                                        only_leaf=True):
+    for full_key, value in traverse_dfs(d, "item", continue_type=dict, only_leaf=True):
         sub_cfg, sub_key = consume_dots(config, full_key, create_default=True)
         sub_cfg[sub_key] = value

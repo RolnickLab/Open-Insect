@@ -44,19 +44,24 @@ class TemperatureScalingPostprocessor(BasePostprocessor):
 
             print('Before temperature - NLL: %.3f' % (before_temperature_nll))
 
-            optimizer = optim.LBFGS([self.temperature], lr=0.01, max_iter=50)
+            # Use log-space parameterization to ensure temperature > 0
+            log_temperature = nn.Parameter(torch.zeros(1, device='cuda'))
+            optimizer = optim.LBFGS([log_temperature], lr=0.01, max_iter=50)
 
             # make sure only temperature parameter will be learned,
             # fix other parameters of the network
             def eval():
                 optimizer.zero_grad()
-                loss = nll_criterion(self._temperature_scale(logits), labels)
+                temp = torch.exp(log_temperature)
+                loss = nll_criterion(logits / temp, labels)
                 loss.backward()
                 return loss
 
             optimizer.step(eval)
 
-            # print learned parameter temperature,
+            # Set the learned temperature (exp of log_temperature)
+            self.temperature.data = torch.exp(log_temperature).data
+            
             # calculate NLL after temperature scaling
             after_temperature_nll = nll_criterion(
                 self._temperature_scale(logits), labels).item()

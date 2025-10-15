@@ -64,10 +64,9 @@ pip install -e .
 pip install libmr
 ```
 
-## Experiments
 The default batch size is 512 and the number of works is 16. With this setting, models can be trained with 1 RTX800 GPU with 48 GB memory, 16 CPUs (and 16 workers), and 100 GB CPU memory in total. 
 
-### Training
+## Training
 For training methods that do not require auxilairy data, modify the configs in `scripts/train.sh` and run 
 
 ```
@@ -83,14 +82,39 @@ bash scripts/train.sh
 You can find the configurations under `configs`.
 
 
-### Evaluation
+## Evaluation
 
-For evaluation, modify the configs in `scripts/eval.sh` and run 
+To evaluate ARPL, run 
 
 ```
-bash scripts/eval.sh
+bash scripts/eval_arpl.sh REGION METHOD POSTHOC_METHOD NETWORK WEIGHT_DIR
 ```
-You can find the configurations under `configs`.
+
+To evaluate OpenGAN, run
+
+
+```
+bash scripts/eval_gan.sh REGION METHOD POSTHOC_METHOD NETWORK WEIGHT_DIR
+```
+
+For all other methods, run 
+
+```
+bash scripts/eval.sh REGION METHOD POSTHOC_METHOD NETWORK WEIGHT_DIR
+```
+
+For example, to evaluate the basic classifier for Central America with MSP using the checkpoint saved under `$HOME/weights`, run
+
+
+```
+bash scripts/eval.sh c-america basics msp resnet50 $HOME/weights
+```
+
+
+See `scripts/test_eval_script.sh` for more examples. 
+
+### Possible errors
+- OpenMax: This method requires predictions of the test set to cover all training species. Otherwise, the following error will occur: `RuntimeError: torch.cat(): expected a non-empty list of Tensors`.
 
 
 ## Examples

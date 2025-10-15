@@ -12,8 +12,13 @@ machine_rank: 0
 
 network:
   pretrained: True
-  checkpoint: ["netF.pth",
-               "criterion.pth"]
+
+  # update the following path to your checkpoints
+
+  weight_dir: None
+  
+  checkpoint: ["'@{network.weight_dir}'/arpl_netF_'@{dataset.name}'.pth",
+               "'@{network.weight_dir}'/arpl_criterion_'@{dataset.name}'.pth"]
                
 pipeline:
   name: test_ood

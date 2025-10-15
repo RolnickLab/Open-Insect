@@ -1,16 +1,148 @@
 import numpy as np
 from sklearn import metrics
+from XCurve.Metrics import OpenAUC
 
 
-def compute_all_metrics(conf, label, pred):
+
+def get_tnr(label, conf, fnr_th):
+    ood_indicator = np.zeros_like(label)
+    ood_indicator[label == -1] = 1
+
+    fpr, tpr, thresholds = metrics.roc_curve(ood_indicator, -conf)
+    target_tpr = 1 - fnr_th
+    idx = np.where(tpr >= target_tpr)[0][0]
+
+    # Get the corresponding threshold and tnr
+    threshold = thresholds[idx]
+    tnr = 1 - fpr[idx]  # tnr = 1 - fpr
+
+    return tnr * 100
+
+
+def ccr_theta(score_known, pred_known, label_known, theta):
+    correct = pred_known == label_known
+    confident = score_known >= theta
+    return (correct & confident).sum() / len(label_known)
+
+
+def urr_theta(score_unknown, theta):
+    return (score_unknown < theta).mean()
+
+
+def compute_oscr(x1, x2, pred, labels):
+    """
+    :param x1: open set score for each known class sample (B_k,)
+    :param x2: open set score for each unknown class sample (B_u,)
+    :param pred: predicted class for each known class sample (B_k,)
+    :param labels: correct class for each known class sample (B_k,)
+    :return: Open Set Classification Rate
+
+    Adapted from https://github.com/sgvaze/osr_closed_set_all_you_need/blob/main/test/utils.py#L125
+    """
+
+    x1, x2 = -x1, -x2
+
+    # x1, x2 = np.max(pred_k, axis=1), np.max(pred_u, axis=1)
+    # pred = np.argmax(pred_k, axis=1)
+
+    correct = pred == labels
+    m_x1 = np.zeros(len(x1))
+    m_x1[pred == labels] = 1
+    k_target = np.concatenate((m_x1, np.zeros(len(x2))), axis=0)
+    u_target = np.concatenate((np.zeros(len(x1)), np.ones(len(x2))), axis=0)
+    predict = np.concatenate((x1, x2), axis=0)
+    n = len(predict)
+
+    # Cutoffs are of prediction values
+
+    CCR = [0 for x in range(n + 2)]
+    FPR = [0 for x in range(n + 2)]
+
+    idx = predict.argsort()
+
+    s_k_target = k_target[idx]
+    s_u_target = u_target[idx]
+
+    for k in range(n - 1):
+        CC = s_k_target[k + 1 :].sum()
+        FP = s_u_target[k:].sum()
+
+        # True	Positive Rate
+        CCR[k] = float(CC) / float(len(x1))
+        # False Positive Rate
+        FPR[k] = float(FP) / float(len(x2))
+
+    CCR[n] = 0.0
+    FPR[n] = 0.0
+    CCR[n + 1] = 1.0
+    FPR[n + 1] = 1.0
+
+    # Positions of ROC curve (FPR, TPR)
+    ROC = sorted(zip(FPR, CCR), reverse=True)
+
+    OSCR = 0
+
+    # Compute AUROC Using Trapezoidal Rule
+    for j in range(n + 1):
+        h = ROC[j][0] - ROC[j + 1][0]
+        w = (ROC[j][1] + ROC[j + 1][1]) / 2.0
+        OSCR = OSCR + h * w
+
+    return OSCR
+
+
+def get_osa_threshold(score_known, score_unknown, pred_known, label_known, alpha):
+    all_scores = np.concatenate([score_known, score_unknown])
+    thresholds = np.unique(all_scores)
+
+    osa_list = []
+    for theta in thresholds:
+        osa = osa_at_theta(
+            score_known, score_unknown, pred_known, label_known, theta, alpha
+        )
+        osa_list.append(osa)
+
+    return max(osa_list), thresholds[np.argmax(osa_list)]
+
+
+def osa_at_theta(score_known, score_unknown, pred_known, label_known, theta, alpha):
+    osa = alpha * ccr_theta(score_known, pred_known, label_known, theta) + (
+        1 - alpha
+    ) * urr_theta(score_unknown, theta)
+
+    return osa
+
+
+def compute_all_metrics(conf, label, pred, theta):
     np.set_printoptions(precision=3)
+
+    results = {}
     recall = 0.95
-    auroc, aupr_in, aupr_out, fpr = auc_and_fpr_recall(conf, label, recall)
+    results["TNR@10"] = get_tnr(label, conf, 0.1)
+    results["TNR@20"] = get_tnr(label, conf, 0.2)
+    results["AUROC"], results["AUPR"], results["FPR"] = auc_and_fpr_recall(
+        conf, label, recall
+    )
 
-    accuracy = acc(pred, label)
+    results["ACC"] = acc(pred, label)
 
-    results = [fpr, auroc, aupr_in, aupr_out, accuracy]
+    score_known, score_unknown = -conf[label != -1], -conf[label == -1]
 
+    pred_known, label_known = pred[label != -1], label[label != -1]
+    results["OSCR"] = (
+        compute_oscr(score_known, score_unknown, pred_known, label_known) * 100
+    )
+    results["OpenAUC"] = (
+        OpenAUC(score_known, score_unknown, pred_known, label_known) * 100
+    )
+    oosa = osa_at_theta(
+        -score_known, -score_unknown, pred_known, label_known, theta, alpha=0.5
+    )  # negate the scores so we have positive confidence
+    osa, _ = get_osa_threshold(
+        -score_known, -score_unknown, pred_known, label_known, alpha=0.5
+    )
+    results["OSA"] = osa * 100
+    results["OOSA"] = oosa * 100
     return results
 
 
@@ -36,8 +168,10 @@ def fpr_recall(conf, label, tpr):
     return fpr, thresh
 
 
-# auc
 def auc_and_fpr_recall(conf, label, tpr_th):
+    """
+    code adapted from openood
+    """
     # following convention in ML we treat OOD as positive
     ood_indicator = np.zeros_like(label)
     ood_indicator[label == -1] = 1
@@ -48,17 +182,9 @@ def auc_and_fpr_recall(conf, label, tpr_th):
     fpr_list, tpr_list, thresholds = metrics.roc_curve(ood_indicator, -conf)
     fpr = fpr_list[np.argmax(tpr_list >= tpr_th)]
 
-    precision_in, recall_in, thresholds_in \
-        = metrics.precision_recall_curve(1 - ood_indicator, conf)
-
-    precision_out, recall_out, thresholds_out \
-        = metrics.precision_recall_curve(ood_indicator, -conf)
-
-    auroc = metrics.auc(fpr_list, tpr_list)
-    aupr_in = metrics.auc(recall_in, precision_in)
-    aupr_out = metrics.auc(recall_out, precision_out)
-
-    return auroc, aupr_in, aupr_out, fpr
+    auroc = metrics.roc_auc_score(ood_indicator, -conf)
+    aupr = metrics.average_precision_score(ood_indicator, -conf)
+    return auroc * 100, aupr * 100, fpr * 100
 
 
 # ccr_fpr
@@ -80,10 +206,7 @@ def ccr_fpr(conf, fpr, pred, label):
     return ccr
 
 
-def detection(ind_confidences,
-              ood_confidences,
-              n_iter=100000,
-              return_data=False):
+def detection(ind_confidences, ood_confidences, n_iter=100000, return_data=False):
     # calculate the minimum detection error
     Y1 = ood_confidences
     X1 = ind_confidences
