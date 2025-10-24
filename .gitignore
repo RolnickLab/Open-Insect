@@ -146,3 +146,10 @@ wandb/
 weights/
 
 results/
+
+output/
+
+configs/
+
+scripts/test_eval_script.sh
+configs/datasets/*
