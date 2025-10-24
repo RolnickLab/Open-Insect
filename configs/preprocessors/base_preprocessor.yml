@@ -1,3 +1,4 @@
 preprocessor:
   name: base
 
+use_standard_pred: True

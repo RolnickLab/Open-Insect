@@ -4,7 +4,7 @@ dataset:
   oe:
     dataset_class: ImglistDataset
     data_dir: ./images
-    imglist_pth: ./metadata/train_aux.txt
+    imglist_pth: ./example/metadata/train_aux.txt
     batch_size: 512
     shuffle: True
     interpolation: bilinear

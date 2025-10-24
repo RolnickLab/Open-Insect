@@ -234,7 +234,12 @@ class Config(dict):
                     "0": False,
                 }[value_str]
             else:
-                self[key] = value_type(value_str)
+                try:
+                    self[key] = value_type(value_str)
+                except Exception as e:
+                    print(e)
+                    print("value_str:", value_str)
+                    exit()
 
         return unknown_args
 

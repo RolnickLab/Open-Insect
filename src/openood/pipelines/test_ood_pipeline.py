@@ -29,35 +29,31 @@ class TestOODPipeline:
         postprocessor = get_postprocessor(self.config)
         # setup for distance-based methods
         postprocessor.setup(net, id_loader_dict, ood_loader_dict)
-        print('\n', flush=True)
-        print(u'\u2500' * 70, flush=True)
+        print("\n", flush=True)
+        print("\u2500" * 70, flush=True)
 
-        # start calculating accuracy
-        print('\nStart evaluation...', flush=True)
-        if self.config.evaluator.ood_scheme == 'fsood':
-            acc_metrics = evaluator.eval_acc(
-                net,
-                id_loader_dict['test'],
-                postprocessor,
-                fsood=True,
-                csid_data_loaders=ood_loader_dict['csid'])
-        else:
-            acc_metrics = evaluator.eval_acc(net, id_loader_dict['test'],
-                                             postprocessor)
-        print('\nAccuracy {:.2f}%'.format(100 * acc_metrics['acc']),
-              flush=True)
-        print(u'\u2500' * 70, flush=True)
+        # # start calculating accuracy
+        # print("\nStart evaluation...", flush=True)
+        # if self.config.evaluator.ood_scheme == "fsood":
+        #     acc_metrics = evaluator.eval_acc(
+        #         net,
+        #         id_loader_dict["test"],
+        #         postprocessor,
+        #         fsood=True,
+        #         csid_data_loaders=ood_loader_dict["csid"],
+        #     )
+        # else:
+        #     acc_metrics = evaluator.eval_acc(net, id_loader_dict["test"], postprocessor)
+        # print("\nAccuracy {:.2f}%".format(100 * acc_metrics["acc"]), flush=True)
+        # print("\u2500" * 70, flush=True)
 
         # start evaluating ood detection methods
         timer = time.time()
-        if self.config.evaluator.ood_scheme == 'fsood':
-            evaluator.eval_ood(net,
-                               id_loader_dict,
-                               ood_loader_dict,
-                               postprocessor,
-                               fsood=True)
+        if self.config.evaluator.ood_scheme == "fsood":
+            evaluator.eval_ood(
+                net, id_loader_dict, ood_loader_dict, postprocessor, fsood=True
+            )
         else:
-            evaluator.eval_ood(net, id_loader_dict, ood_loader_dict,
-                               postprocessor)
-        print('Time used for eval_ood: {:.0f}s'.format(time.time() - timer))
-        print('Completed!', flush=True)
+            evaluator.eval_ood(net, id_loader_dict, ood_loader_dict, postprocessor)
+        print("Time used for eval_ood: {:.0f}s".format(time.time() - timer))
+        print("Completed!", flush=True)

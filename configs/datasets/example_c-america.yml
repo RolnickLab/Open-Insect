@@ -16,22 +16,22 @@ dataset:
 
   train:
     dataset_class: ImglistDataset
-    data_dir: ./images
-    imglist_pth: ./metadata/train_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    data_dir: ./example/images
+    imglist_pth: ./example/metadata/train_id.txt # the metadata (a txt file with the following format:<image path> <label>)
     batch_size: 512
     shuffle: True
-    json_path: ./data/c-america_category_map.json 
+    json_path: ./metadata/c-america_id_class_distribution.json 
     len: 636 # total number of images
   val:
     dataset_class: ImglistDataset
-    data_dir: ./images # the image directory 
-    imglist_pth: ./metadata/val_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    data_dir: ./example/images # the image directory 
+    imglist_pth: ./example/metadata/val_id.txt # the metadata (a txt file with the following format:<image path> <label>)
     batch_size: 128
     shuffle: False
   test:
     dataset_class: ImglistDataset
-    data_dir: ./images # the image directory 
-    imglist_pth: ./metadata/test_id.txt # the metadata (a txt file with the following format:<image path> <label>)
+    data_dir: ./example/images # the image directory 
+    imglist_pth: ./example/metadata/test_id.txt # the metadata (a txt file with the following format:<image path> <label>)
     batch_size: 128
     shuffle: False
   

@@ -74,6 +74,7 @@ def get_trainer(net, train_loader: DataLoader, val_loader: DataLoader, config: C
             "t2fnorm": T2FNormTrainer,
             "reweightood": ReweightOODTrainer,
             "extended": ExtendedTrainer,
+            "novel_branch": ExtendedTrainer,
         }
         if config.trainer.name in ["cider", "npos"]:
             return trainers[config.trainer.name](net, train_loader, val_loader, config)

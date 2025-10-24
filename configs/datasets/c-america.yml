@@ -19,7 +19,7 @@ dataset:
     data_dir: /network/scratch/y/yuyan.chen/ami_gbif_train_resized_new/
     imglist_pth:  /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/txt/03_c-america_train_id.txt
     csv_path: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/csv/03_c-america_train_id.csv 
-    json_path: /network/scratch/y/yuyan.chen/ood_benchmark/ami/metadata/csv/03_ami-gbif_fine-grained_c-america_category_map.json
+    json_path: ./metadata/c-america_id_class_distribution.json 
     batch_size: 128
     shuffle: True
     len: 72188

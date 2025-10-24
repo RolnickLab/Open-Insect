@@ -10,7 +10,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
-    ds = load_dataset("anonymous987654356789/open-insect-bci", split="test")
+    ds = load_dataset("yuyan-chen/open-insect-bci", split="test")
 
     image_dir = os.path.join(args.download_dir, "images", "bci")
     metadata_dir = os.path.join(args.download_dir, "metadata", "c-america")

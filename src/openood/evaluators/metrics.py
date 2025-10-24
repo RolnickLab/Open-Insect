@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn import metrics
 from XCurve.Metrics import OpenAUC
-
+import matplotlib.pyplot as plt
 
 
 def get_tnr(label, conf, fnr_th):
@@ -29,7 +29,7 @@ def urr_theta(score_unknown, theta):
     return (score_unknown < theta).mean()
 
 
-def compute_oscr(x1, x2, pred, labels):
+def compute_auoscr(x1, x2, pred, labels):
     """
     :param x1: open set score for each known class sample (B_k,)
     :param x2: open set score for each unknown class sample (B_u,)
@@ -79,16 +79,15 @@ def compute_oscr(x1, x2, pred, labels):
 
     # Positions of ROC curve (FPR, TPR)
     ROC = sorted(zip(FPR, CCR), reverse=True)
-
-    OSCR = 0
-
+    FPR_sorted, CCR_sorted = zip(*ROC)
+    AUOSCR = 0
     # Compute AUROC Using Trapezoidal Rule
     for j in range(n + 1):
         h = ROC[j][0] - ROC[j + 1][0]
         w = (ROC[j][1] + ROC[j + 1][1]) / 2.0
-        OSCR = OSCR + h * w
+        AUOSCR = AUOSCR + h * w
 
-    return OSCR
+    return AUOSCR, FPR_sorted, CCR_sorted
 
 
 def get_osa_threshold(score_known, score_unknown, pred_known, label_known, alpha):
@@ -124,26 +123,34 @@ def compute_all_metrics(conf, label, pred, theta):
         conf, label, recall
     )
 
-    results["ACC"] = acc(pred, label)
+    results["ACC"] = acc(pred, label) * 100
 
     score_known, score_unknown = -conf[label != -1], -conf[label == -1]
 
     pred_known, label_known = pred[label != -1], label[label != -1]
-    results["OSCR"] = (
-        compute_oscr(score_known, score_unknown, pred_known, label_known) * 100
+    AUOSCR, FPR_sorted, CCR_sorted = compute_auoscr(
+        score_known, score_unknown, pred_known, label_known
     )
+
+    results["AUOSCR"] = AUOSCR * 100
     results["OpenAUC"] = (
         OpenAUC(score_known, score_unknown, pred_known, label_known) * 100
     )
-    oosa = osa_at_theta(
-        -score_known, -score_unknown, pred_known, label_known, theta, alpha=0.5
-    )  # negate the scores so we have positive confidence
-    osa, _ = get_osa_threshold(
-        -score_known, -score_unknown, pred_known, label_known, alpha=0.5
-    )
-    results["OSA"] = osa * 100
-    results["OOSA"] = oosa * 100
-    return results
+    if theta:
+        oosa = osa_at_theta(
+            -score_known, -score_unknown, pred_known, label_known, theta, alpha=0.5
+        )  # negate the scores so we have positive confidence
+        osa, _ = get_osa_threshold(
+            -score_known, -score_unknown, pred_known, label_known, alpha=0.5
+        )
+
+        results["OSA"] = osa * 100
+        results["OOSA"] = oosa * 100
+    else:
+        results["OSA"] = -1
+        results["OOSA"] = -1
+
+    return results, FPR_sorted, CCR_sorted
 
 
 # accuracy

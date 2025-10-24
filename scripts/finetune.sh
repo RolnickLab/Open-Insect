@@ -4,7 +4,7 @@ REGION=$1
 METHOD=$2
 NETWORK=$3
 OUTPUT_DIR=$4
-
+CHECKPOINT=$5
 
 if [ "$METHOD" = "udg" ]; then
     DATASET_CLASS="UDGDataset"
@@ -42,26 +42,29 @@ else
 fi
 
 
-# for training from scratch 
+# for finetuning
 python scripts/main.py \
- --config configs/datasets/example_$REGION.yml \
-   configs/datasets/example_${REGION}_oe.yml \
+ --config configs/datasets/$REGION.yml \
+   configs/datasets/${REGION}_oe.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/networks/resnet50.yml \
     configs/networks/${NETWORK}.yml \
     configs/pipelines/train/baseline.yml \
     configs/pipelines/train/train_$METHOD.yml \
-    --network.pretrained False \
-    --optimizer.num_epochs 3 \
-    --optimizer.warmup_epochs 1 \
-    --optimizer.lr 0.01 \
+     --network.pretrained True \
+     --network.checkpoint $CHECKPOINT \
+     --optimizer.num_epochs 1 \
+     --optimizer.warmup_epochs 0 \
+     --optimizer.lr 0.001 \
+     --trainer.name $METHOD \
+     --dataset.name $REGION \
      --dataset.train.dataset_class $DATASET_CLASS \
+     --dataset.oe.dataset_class $DATASET_CLASS  \
      --dataset.num_classes $NUM_CLASSES \
-    --dataset.train.batch_size 32 \
-    --num_gpus 1 --num_workers 2 \
-    --merge_option merge \
-    --seed 0 \
+     --dataset.train.batch_size 32 \
+     --num_gpus 1 --num_workers 2 \
+     --merge_option merge \
+     --seed 0 \
      --output_dir $OUTPUT_DIR \
-    --exp_name ${REGION}/${METHOD}"/train_from_scratch/s'@{seed}'" \
+     --exp_name ${REGION}/${METHOD}"/finetune/s'@{seed}'" \
    
-

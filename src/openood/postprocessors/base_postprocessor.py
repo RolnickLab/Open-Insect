@@ -4,6 +4,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import inspect
 
 import openood.utils.comm as comm
 

@@ -13,6 +13,12 @@ from .base_evaluator import BaseEvaluator
 from .metrics import compute_all_metrics
 import pandas as pd
 
+import json
+from collections import Counter
+import torch
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 def get_osa_threshold(score_known, score_unknown, pred_known, label_known, alpha):
 
@@ -45,6 +51,29 @@ def get_osa_threshold(score_known, score_unknown, pred_known, label_known, alpha
     return max(osa_list), thresholds[np.argmax(osa_list)]
 
 
+def update_attributes(postprocessor, config):
+    num_classes = config.dataset.num_classes
+    if hasattr(postprocessor, "num_classes"):
+        postprocessor.num_classes = num_classes
+
+    if hasattr(postprocessor, "nc"):
+        postprocessor.nc = num_classes
+
+    if hasattr(postprocessor, "targets"):
+        with open(config.dataset.train.json_path, "r") as f:
+            id_class_distribution = json.load(f)
+
+        targets = (
+            torch.tensor([id_class_distribution[str(i)] for i in range(num_classes)])
+            .double()
+            .cuda()
+        )
+        targets = targets / targets.sum()
+        targets = targets.unsqueeze(0)
+
+        postprocessor.targets = targets
+
+
 class OODEvaluator(BaseEvaluator):
     def __init__(self, config: Config):
         """OOD Evaluator.
@@ -56,6 +85,7 @@ class OODEvaluator(BaseEvaluator):
         self.id_pred = None
         self.id_conf = None
         self.id_gt = None
+        self.config = config
 
     def eval_ood(
         self,
@@ -66,7 +96,12 @@ class OODEvaluator(BaseEvaluator):
         fsood: bool = False,
     ):
 
+        use_standard_pred = self.config.use_standard_pred
+
+        update_attributes(postprocessor, self.config)
         id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loaders["val"])
+        if use_standard_pred:
+            id_pred, id_gt = self._classifier_inference(net, id_data_loaders["val"])
         ood_pred, ood_conf, ood_gt = postprocessor.inference(
             net, ood_data_loaders["val"]
         )
@@ -97,6 +132,10 @@ class OODEvaluator(BaseEvaluator):
 
         print(f"Performing inference on {dataset_name} dataset...", flush=True)
         id_pred, id_conf, id_gt = postprocessor.inference(net, id_data_loaders["test"])
+
+        if use_standard_pred:
+            id_pred, id_gt = self._classifier_inference(net, id_data_loaders["test"])
+
         if self.config.recorder.save_scores:
             self._save_scores(id_pred, id_conf, id_gt, dataset_name)
 
@@ -113,7 +152,7 @@ class OODEvaluator(BaseEvaluator):
 
         # load nearood data and compute ood metrics
         print("\u2500" * 70, flush=True)
-        near_metrics = self._eval_ood(
+        near_metrics, FPR_list_near, CCR_list_near = self._eval_ood(
             net,
             [id_pred, id_conf, id_gt],
             ood_data_loaders,
@@ -123,7 +162,7 @@ class OODEvaluator(BaseEvaluator):
 
         # load farood data and compute ood metrics
         print("\u2500" * 70, flush=True)
-        far_metrics = self._eval_ood(
+        far_metrics, FPR_list_far, CCR_list_far = self._eval_ood(
             net,
             [id_pred, id_conf, id_gt],
             ood_data_loaders,
@@ -132,6 +171,8 @@ class OODEvaluator(BaseEvaluator):
         )
 
         combined_metrics = near_metrics + far_metrics
+        FPR_list_combined = FPR_list_near + FPR_list_far
+        CCR_list_combined = CCR_list_near + CCR_list_far
         nearood_keys = list(ood_data_loaders["nearood"].keys())
         farood_keys = list(ood_data_loaders["farood"].keys())
         index_labels = nearood_keys + farood_keys
@@ -150,6 +191,19 @@ class OODEvaluator(BaseEvaluator):
         csv_path = os.path.join(self.config.output_dir, "ood.csv")
         df.to_csv(csv_path)
 
+        plt.figure(figsize=(6, 6))
+        # plot the OSCR curve
+        for fpr, ccr, label in zip(FPR_list_combined, CCR_list_combined, index_labels):
+            plt.plot(fpr, ccr, label=label, linewidth=2)
+
+        plt.xlabel("False Positive Rate (FPR)")
+        plt.ylabel("Correct Classification Rate (CCR)")
+        plt.title("OSCR Curve")
+        plt.legend(loc="lower right", fontsize=8)
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.config.output_dir, "oscr.png"))
+
     def _eval_ood(
         self,
         net: nn.Module,
@@ -161,9 +215,12 @@ class OODEvaluator(BaseEvaluator):
         print(f"Processing {ood_split}...", flush=True)
         [id_pred, id_conf, id_gt] = id_list
         metrics_list = []
+        FPR_list, CCR_list = [], []
         for dataset_name, ood_dl in ood_data_loaders[ood_split].items():
             print(f"Performing inference on {dataset_name} dataset...", flush=True)
-            ood_pred, ood_conf, ood_gt = postprocessor.inference(net, ood_dl)
+            ood_pred, ood_conf, ood_gt = postprocessor.inference(
+                net, ood_dl
+            )  # which prediction to use?
             ood_gt = -1 * np.ones_like(ood_gt)  # hard set to -1 as ood
             if self.config.recorder.save_scores:
                 self._save_scores(ood_pred, ood_conf, ood_gt, dataset_name)
@@ -174,12 +231,14 @@ class OODEvaluator(BaseEvaluator):
 
             print(f"Computing metrics on {dataset_name} dataset...")
 
-            ood_metrics = compute_all_metrics(
+            ood_metrics, FPR_sorted, CCR_sorted = compute_all_metrics(
                 conf, label, pred, postprocessor.osa_threshold
             )
             metrics_list.append(ood_metrics)
+            FPR_list.append(FPR_sorted)
+            CCR_list.append(CCR_sorted)
 
-        return metrics_list
+        return metrics_list, FPR_list, CCR_list
 
     def eval_ood_val(
         self,
@@ -210,11 +269,14 @@ class OODEvaluator(BaseEvaluator):
             pred = np.concatenate([id_pred, ood_pred])
             conf = np.concatenate([id_conf, ood_conf])
             label = np.concatenate([id_gt, ood_gt])
-            ood_metrics = compute_all_metrics(
+            ood_metrics, _, _ = compute_all_metrics(
                 conf, label, pred, postprocessor.osa_threshold
             )
-            val_auroc = ood_metrics[1]
-        return {"auroc": 100 * val_auroc}
+            val_auroc = ood_metrics["AUROC"]
+
+        if val_auroc < 1:
+            val_auroc *= 100
+        return {"auroc": val_auroc}
 
     def _save_csv(self, metrics, dataset_name):
         [fpr, auroc, aupr_in, aupr_out, accuracy] = metrics
@@ -259,6 +321,25 @@ class OODEvaluator(BaseEvaluator):
         os.makedirs(save_dir, exist_ok=True)
         np.savez(os.path.join(save_dir, save_name), pred=pred, conf=conf, label=gt)
 
+    def _classifier_inference(
+        self, net, data_loader: DataLoader, msg: str = "Acc Eval", progress: bool = True
+    ):
+        net.eval()
+
+        all_preds = []
+        all_labels = []
+        with torch.no_grad():
+            for batch in tqdm(data_loader, desc=msg, disable=not progress):
+                data = batch["data"].cuda()
+                logits = net(data)
+                preds = logits.argmax(1)
+                all_preds.append(preds.cpu())
+                all_labels.append(batch["label"])
+
+        all_preds = torch.cat(all_preds)
+        all_labels = torch.cat(all_labels)
+        return all_preds, all_labels
+
     def eval_acc(
         self,
         net: nn.Module,
@@ -276,9 +357,17 @@ class OODEvaluator(BaseEvaluator):
             net["backbone"].eval()
         else:
             net.eval()
-        self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(
-            net, data_loader
-        )
+
+        update_attributes(postprocessor, self.config)
+
+        if self.config.use_standard_pred:
+            self.id_pred, self.id_gt = self._classifier_inference(
+                net, data_loader, "ID Acc Eval"
+            )
+        else:
+            self.id_pred, self.id_conf, self.id_gt = postprocessor.inference(
+                net, data_loader
+            )
 
         if fsood:
             assert csid_data_loaders is not None
@@ -323,7 +412,7 @@ class OODEvaluator(BaseEvaluator):
             pred = np.concatenate([id_pred, ood_pred])
             conf = np.concatenate([id_conf, ood_conf])
             label = np.concatenate([id_gt, ood_gt])
-            ood_metrics = compute_all_metrics(
+            ood_metrics, _, _ = compute_all_metrics(
                 conf, label, pred, postprocessor.osa_threshold
             )
             index = hyperparam_combination.index(hyperparam)

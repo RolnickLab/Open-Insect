@@ -42,8 +42,11 @@ def download_images_from_metadata(
     log_dir = os.path.join(download_dir, "logs", region)
 
     os.makedirs(image_dir, exist_ok=True)
+    os.chmod(image_dir, 0o755)
     os.makedirs(metadata_dir, exist_ok=True)
+    os.chmod(metadata_dir, 0o755)
     os.makedirs(log_dir, exist_ok=True)
+    os.chmod(log_dir, 0o755)
 
     metadata_filename = f"{split}.txt"
     metadata_path = os.path.join(metadata_dir, metadata_filename)
@@ -104,6 +107,7 @@ def download_images_from_metadata(
             metadata.flush()
             log.write(f"{i}\n")
             log.flush()
+            print(i)
 
         print("Download finished", flush=True)
 
@@ -129,7 +133,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     region_name = args.region_name
-    ds = load_dataset("anonymous987654356789/open-insect", region_name)
+    ds = load_dataset("yuyan-chen/open-insect", region_name)
 
     for split, dataset in ds.items():
         ood_split = split.split("_")[1]
