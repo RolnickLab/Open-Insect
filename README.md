@@ -240,7 +240,7 @@ Run
 ```
 bash scripts/examples/eval.sh
 ```
-The output will be saved as `output/open-insect-example/base/msp.csv`. You can compare the output with `output/open-insect-example/base/msp_expected.csv`.
+The outputs will be saved in `results/open-insect-example/base/msp/ood.csv`. You can compare the outputs with `example/ood.csv`.
 
 # Acknowledgement
 

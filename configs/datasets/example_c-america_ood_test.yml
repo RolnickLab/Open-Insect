@@ -12,7 +12,7 @@ ood_dataset:
 
   split_names: [val, nearood, farood]
   val:
-    data_dir: ./images
+    data_dir: ./example/images
     imglist_pth: ./example/metadata/val_ood.txt
   nearood:
     datasets: [local]
