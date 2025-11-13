@@ -245,3 +245,16 @@ The outputs will be saved in `results/open-insect-example/base/msp/ood.csv`. You
 # Acknowledgement
 
 This codebase is built using [OpenOOD](https://github.com/Jingkang50/OpenOOD/tree/main). We sincerely appreciate their efforts in making this valuable resource publicly available.
+
+# Citation
+Our paper:
+```
+@inproceedings{
+chen2025openinsect,
+title={Open-Insect: Benchmarking Open-Set Recognition of Novel Species in Biodiversity Monitoring},
+author={Yuyan Chen and Nico Lang and B. Christian Schmidt and Aditya Jain and Yves Basset and Sara Beery and Maxim Larriv{\'e}e and David Rolnick},
+booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+year={2025},
+url={https://openreview.net/forum?id=63Tia99ofI}
+}
+```
