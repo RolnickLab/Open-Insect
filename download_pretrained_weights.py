@@ -20,7 +20,9 @@ snapshot_path = snapshot_download(
 pth_files = glob.glob(os.path.join(snapshot_path, "*.pth"))
 
 for path in pth_files:
-    shutil.copy(path, os.path.join("weights", os.path.basename(path)))
+    if "basics_c-america.pth" in path:
+        os.makedirs("weights", exist_ok=True)
+        shutil.copy(path, os.path.join("weights", os.path.basename(path)))
 
     os.makedirs(args.weight_dir, exist_ok=True)
     shutil.copy(

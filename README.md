@@ -1,6 +1,6 @@
 Note: This codebase has only been tested on Debian-based Linux systems. CUDA is required to install the dependencies and run experiments.  
 
-# The Openn-Insect Dataset
+# The Open-Insect Dataset
 
 ## Open-Insect
 The Open-Insect dataset with GBIF images is publicly avaiable at [Open-Insect](https://huggingface.co/datasets/yuyan-chen/open-insect) on hugggingface.

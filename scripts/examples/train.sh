@@ -1,7 +1,7 @@
 #!/bin/bash
 
 python scripts/main.py \
- --config configs/datasets/example.yml \
+ --config configs/datasets/example_c-america.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/networks/resnet50.yml \
     configs/pipelines/train/baseline.yml \

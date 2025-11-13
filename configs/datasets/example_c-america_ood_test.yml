@@ -17,14 +17,14 @@ ood_dataset:
   nearood:
     datasets: [local]
     local:
-      data_dir: ./images
+      data_dir: ./example/images
       imglist_pth: ./example/metadata/test_ood_local.txt
   farood:
     datasets: [non-local, non-moth]
     non-local:
-      data_dir: ./images
+      data_dir: ./example/images
       imglist_pth: ./example/metadata/test_ood_non-local.txt
     non-moth: 
-      data_dir: ./images
+      data_dir: ./example/images
       imglist_pth: ./example/metadata/test_ood_non-moth.txt
       
