@@ -206,7 +206,7 @@ python download_pretrained_weights.py --weight_dir WEIGHT_DIR
 
 
 
-# Tests
+# Examples
 Here are some minimal examples to test this codebase. First, activate the virtual environment by
 
 ```
