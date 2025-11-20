@@ -5,7 +5,7 @@ Note: This codebase has only been tested on Debian-based Linux systems. CUDA is 
 ## Open-Insect
 The Open-Insect dataset with GBIF images is publicly avaiable at [Open-Insect](https://huggingface.co/datasets/yuyan-chen/open-insect) on hugggingface.
 
-To download the images and generate metadata for training:
+To download the original images and generate metadata for training:
 
 - Change `download_dir` to the directory where you want the downloaded dataset to be saved.
 - The `resize_size` is the smaller edge of the image after resizing. Change `resize_size` accordingly. The default value is 224. 
@@ -31,7 +31,33 @@ Once downloading finishes,
     ```
 - Change `data_dir`, `imglist_pth`, and `pre_size` in the configs under `configs/datasets` accordingly before training or evaluation.
 
+To download the resized images, 
 
+```
+# Add to your ~/.bashrc or ~/.zshrc
+alias aws-public="aws --no-sign-request --endpoint-url https://object-arbutus.cloud.computecanada.ca"
+
+# Reload your shell if you use Zsh
+source ~/.zshrc 
+# Reload your shell if you use Bash
+source ~/.bashrc 
+
+# List the folders
+aws-public s3 ls s3://open-insect-resized/
+
+# Download the images to `download_dir`
+
+# Download non-local and non-moth data 
+aws-public s3 sync s3://open-insect-resized/non-local/ <download_dir>
+aws-public s3 sync s3://open-insect-resized/non-moth/ <download_dir>
+
+# Download the data for each region
+aws-public s3 sync s3://open-insect-resized/c-america/ <download_dir>
+aws-public s3 sync s3://open-insect-resized/ne-america/ <download_dir>
+aws-public s3 sync s3://open-insect-resized/w-europe/ <download_dir>
+
+
+```
 ## Open-Insect-BCI
 
 The C-America O-BCI dataset is hosted separately at [Open-Insect-BCI](https://huggingface.co/datasets/yuyan-chen/open-insect-bci) on huggingface.
